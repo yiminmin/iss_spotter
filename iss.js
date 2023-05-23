@@ -1,14 +1,7 @@
-// iss.js
+// Import the 'request' library which we use to make HTTP requests.
 const request = require('request');
 
-/**
- * Makes a single API request to retrieve the user's IP address.
- * Input:
- *   - A callback (to pass back an error or the IP string)
- * Returns (via Callback):
- *   - An error, if any (nullable)
- *   - The IP address as a string (null if error). Example: "162.245.144.188"
- */
+// Function to fetch the public IP of the user.
 const fetchMyIP = function(callback) {
   request('https://api.ipify.org?format=json', (error, response, body) => {
     if (error) return callback(error, null);
@@ -23,9 +16,9 @@ const fetchMyIP = function(callback) {
   });
 };
 
+// Function to fetch geographical coordinates by IP.
 const fetchCoordsByIP = function(ip, callback) {
   request(`http://ipwho.is/${ip}`, (error, response, body) => {
-
     if (error) {
       callback(error, null);
       return;
@@ -40,13 +33,11 @@ const fetchCoordsByIP = function(ip, callback) {
     } 
 
     const { latitude, longitude } = parsedBody;
-
     callback(null, {latitude, longitude});
   });
-
-  
 };
 
+// Function to fetch next ISS flyover times for given coordinates.
 const fetchISSFlyOverTimes = function(coords, callback) {
   const url = `https://iss-flyover.herokuapp.com/json/?lat=${coords.latitude}&lon=${coords.longitude}`;
 
@@ -66,7 +57,28 @@ const fetchISSFlyOverTimes = function(coords, callback) {
   });
 };
 
+// Function to orchestrate the three above functions to fetch the next 5 upcoming ISS fly overs.
+const nextISSTimesForMyLocation = function(callback) {
+  fetchMyIP((error, ip) => {
+    if (error) {
+      return callback(error, null);
+    }
 
-module.exports = { fetchISSFlyOverTimes, fetchMyIP, fetchCoordsByIP };
+    fetchCoordsByIP(ip, (error, loc) => {
+      if (error) {
+        return callback(error, null);
+      }
 
+      fetchISSFlyOverTimes(loc, (error, nextPasses) => {
+        if (error) {
+          return callback(error, null);
+        }
 
+        callback(null, nextPasses);
+      });
+    });
+  });
+};
+
+// Export the orchestrator function which is the only one required by external modules.
+module.exports = { nextISSTimesForMyLocation };

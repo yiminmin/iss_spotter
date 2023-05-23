@@ -1,30 +1,23 @@
-// index.js
+//index.js
+// Import the 'nextISSTimesForMyLocation' function from the 'iss' module.
+const { nextISSTimesForMyLocation } = require('./iss');
 
-// The code below is temporary and can be commented out.
-const { fetchMyIP, fetchCoordsByIP, fetchISSFlyOverTimes} = require('./iss');
-
-
-fetchMyIP((error, ip) => {
-  if (error) {
-    console.log("It didn't work!" , error);
-    return;
+// Function to format and print the ISS pass times.
+const printPassTimes = function(passTimes) {
+  for (const pass of passTimes) {
+    const datetime = new Date(0);
+    datetime.setUTCSeconds(pass.risetime);
+    const duration = pass.duration;
+    console.log(`Next pass at ${datetime} for ${duration} seconds!`);
   }
-  fetchCoordsByIP(ip, (error, coords) => {
-    if (error) {
-      console.log("It didn't work!" , error);
-      return;
-    }
+};
 
-    fetchISSFlyOverTimes(coords, (error, passes) => {
-      if (error) {
-        console.log("It didn't work!" , error);
-        return;
-      }
-    
-      console.log("It worked! Returned passes:", passes);
-    });
-  });
+// Use the imported function to fetch the next ISS pass times and print them.
+nextISSTimesForMyLocation((error, passTimes) => {
+  if (error) {
+    return console.log("It didn't work!", error);
+  }
 
-  
-
+  // If there was no error, print the pass times.
+  printPassTimes(passTimes);
 });
